@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MusicGen Studio</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">🎵</div>
+                <span class="logo-text">MusicGen Studio</span>
+            </div>
+            
+            <nav class="nav">
+                <a href="#" class="nav-item active" data-section="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-section="upload">
+                    <span class="nav-icon">📁</span>
+                    <span>Upload Music</span>
+                </a>
+                <a href="#" class="nav-item" data-section="process">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Process & Label</span>
+                </a>
+                <a href="#" class="nav-item" data-section="train">
+                    <span class="nav-icon">🧠</span>
+                    <span>Train Model</span>
+                </a>
+                <a href="#" class="nav-item" data-section="generate">
+                    <span class="nav-icon">✨</span>
+                    <span>Generate</span>
+                </a>
+                <a href="#" class="nav-item" data-section="library">
+                    <span class="nav-icon">🎧</span>
+                    <span>Library</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="model-status">
+                    <span class="status-dot"></span>
+                    <span id="modelName">Loading...</span>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <header class="section-header">
+                    <h1>Dashboard</h1>
+                    <p class="subtitle">Overview of your music generation pipeline</p>
+                </header>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📁</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="rawCount">0</span>
+                            <span class="stat-label">Raw Audio Files</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔊</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="processedCount">0</span>
+                            <span class="stat-label">Processed Chunks</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏷️</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="labeledCount">0</span>
+                            <span class="stat-label">Labeled Samples</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎵</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="generatedCount">0</span>
+                            <span class="stat-label">Generated Tracks</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pipeline-status">
+                    <h2>Pipeline Status</h2>
+                    <div class="pipeline-steps">
+                        <div class="pipeline-step" id="step-upload">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Upload</h3>
+                                <p>Add your music collection</p>
+                            </div>
+                            <div class="step-status"><span id="uploadStatus">Ready</span></div>
+                        </div>
+                        <div class="pipeline-connector"></div>
+                        <div class="pipeline-step" id="step-process">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Process</h3>
+                                <p>Chunk and normalize audio</p>
+                            </div>
+                            <div class="step-status"><span id="processStatus">Waiting</span></div>
+                        </div>
+                        <div class="pipeline-connector"></div>
+                        <div class="pipeline-step" id="step-label">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>Label</h3>
+                                <p>Auto-analyze and describe</p>
+                            </div>
+                            <div class="step-status"><span id="labelStatus">Waiting</span></div>
+                        </div>
+                        <div class="pipeline-connector"></div>
+                        <div class="pipeline-step" id="step-train">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h3>Train</h3>
+                                <p>Fine-tune on your style</p>
+                            </div>
+                            <div class="step-status"><span id="trainStatus">Waiting</span></div>
+                        </div>
+                        <div class="pipeline-connector"></div>
+                        <div class="pipeline-step" id="step-generate">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h3>Generate</h3>
+                                <p>Create new music</p>
+                            </div>
+                            <div class="step-status"><span id="generateStatus">Ready</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Upload Section -->
+            <section id="upload" class="section">
+                <header class="section-header">
+                    <h1>Upload Music</h1>
+                    <p class="subtitle">Add audio files to your training dataset</p>
+                </header>
+                
+                <div class="upload-area" id="dropZone">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drop files here or click to browse</h3>
+                    <p>Supports MP3, WAV, FLAC, M4A, OGG, AAC</p>
+                    <input type="file" id="fileInput" multiple accept=".mp3,.wav,.flac,.m4a,.ogg,.aac" hidden>
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        Select Files
+                    </button>
+                </div>
+                
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="uploadProgressBar"></div>
+                    </div>
+                    <span id="uploadProgressText">Uploading...</span>
+                </div>
+                
+                <div class="file-list">
+                    <h2>Uploaded Files</h2>
+                    <div id="rawFileList" class="file-grid"></div>
+                </div>
+            </section>
+            
+            <!-- Process Section -->
+            <section id="process" class="section">
+                <header class="section-header">
+                    <h1>Process & Label</h1>
+                    <p class="subtitle">Prepare your audio for training</p>
+                </header>
+                
+                <div class="process-cards">
+                    <div class="process-card">
+                        <div class="process-card-header">
+                            <span class="process-icon">⚙️</span>
+                            <h2>1. Preprocess Audio</h2>
+                        </div>
+                        <p>Converts audio to 32kHz mono, chunks into 30-second segments, and normalizes levels.</p>
+                        <div class="process-progress" id="preprocessProgress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="preprocessProgressBar" style="width: 0%"></div>
+                            </div>
+                            <span id="preprocessMessage">Ready to process</span>
+                        </div>
+                        <button class="btn btn-primary" id="btnPreprocess" onclick="startPreprocessing()">
+                            Start Preprocessing
+                        </button>
+                    </div>
+                    
+                    <div class="process-card">
+                        <div class="process-card-header">
+                            <span class="process-icon">🏷️</span>
+                            <h2>2. Auto-Label</h2>
+                        </div>
+                        <p>Analyzes tempo, key, mood, and generates text descriptions for each audio chunk.</p>
+                        <div class="process-progress" id="labelProgress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="labelProgressBar" style="width: 0%"></div>
+                            </div>
+                            <span id="labelMessage">Ready to label</span>
+                        </div>
+                        <button class="btn btn-primary" id="btnLabel" onclick="startLabeling()">
+                            Start Labeling
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="metadata-preview">
+                    <h2>Sample Labels</h2>
+                    <div id="metadataList" class="metadata-grid"></div>
+                </div>
+            </section>
+            
+            <!-- Train Section -->
+            <section id="train" class="section">
+                <header class="section-header">
+                    <h1>Train Model</h1>
+                    <p class="subtitle">Fine-tune MusicGen on your music style</p>
+                </header>
+                
+                <div class="train-container">
+                    <div class="train-settings card">
+                        <h2>Training Settings</h2>
+                        
+                        <div class="form-group">
+                            <label for="epochs">Epochs</label>
+                            <input type="number" id="epochs" value="10" min="1" max="100">
+                            <span class="hint">More epochs = better learning, but longer training</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="learningRate">Learning Rate</label>
+                            <input type="number" id="learningRate" value="0.0001" step="0.00001" min="0.00001" max="0.01">
+                            <span class="hint">Lower = more stable, Higher = faster learning</span>
+                        </div>
+                        
+                        <button class="btn btn-primary btn-large" id="btnTrain" onclick="startTraining()">
+                            🚀 Start Training
+                        </button>
+                    </div>
+                    
+                    <div class="train-monitor card">
+                        <h2>Training Progress</h2>
+                        
+                        <div class="train-stats">
+                            <div class="train-stat">
+                                <span class="train-stat-label">Status</span>
+                                <span class="train-stat-value" id="trainStatusValue">Idle</span>
+                            </div>
+                            <div class="train-stat">
+                                <span class="train-stat-label">Epoch</span>
+                                <span class="train-stat-value" id="trainEpoch">0/0</span>
+                            </div>
+                            <div class="train-stat">
+                                <span class="train-stat-label">Loss</span>
+                                <span class="train-stat-value" id="trainLoss">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-bar large">
+                            <div class="progress-fill" id="trainProgressBar" style="width: 0%"></div>
+                        </div>
+                        
+                        <div class="train-log">
+                            <div id="trainLog" class="log-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Generate Section -->
+            <section id="generate" class="section">
+                <header class="section-header">
+                    <h1>Generate Music</h1>
+                    <p class="subtitle">Create new music from text descriptions</p>
+                </header>
+                
+                <div class="generate-container">
+                    <div class="generate-form card">
+                        <div class="form-group">
+                            <label for="prompt">Describe your music</label>
+                            <textarea id="prompt" rows="4" placeholder="e.g., upbeat electronic dance music with synthesizer leads and driving bass"></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="duration">Duration (seconds)</label>
+                                <input type="number" id="duration" value="30" min="5" max="300">
+                            </div>
+                            <div class="form-group">
+                                <label for="temperature">Creativity</label>
+                                <input type="range" id="temperature" min="0.5" max="1.5" step="0.1" value="1.0">
+                                <span id="temperatureValue">1.0</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="count">Variations</label>
+                                <input type="number" id="count" value="1" min="1" max="5">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-accent btn-large" id="btnGenerate" onclick="startGeneration()">
+                            ✨ Generate Music
+                        </button>
+                        
+                        <div class="generate-progress" id="generateProgress" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="generateProgressBar"></div>
+                            </div>
+                            <span id="generateMessage">Generating...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="prompt-suggestions">
+                        <h3>Prompt Ideas</h3>
+                        <div class="suggestion-chips">
+                            <button class="chip" onclick="setPrompt('upbeat electronic dance music with synthesizer leads')">Electronic Dance</button>
+                            <button class="chip" onclick="setPrompt('calm ambient piano melody with soft reverb')">Ambient Piano</button>
+                            <button class="chip" onclick="setPrompt('energetic rock guitar riff with drums')">Rock Guitar</button>
+                            <button class="chip" onclick="setPrompt('smooth jazz saxophone with walking bass')">Smooth Jazz</button>
+                            <button class="chip" onclick="setPrompt('cinematic orchestral theme with strings')">Orchestral</button>
+                            <button class="chip" onclick="setPrompt('lo-fi hip hop beat with vinyl crackle')">Lo-Fi Hip Hop</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Library Section -->
+            <section id="library" class="section">
+                <header class="section-header">
+                    <h1>Generated Library</h1>
+                    <p class="subtitle">Listen to your AI-generated tracks</p>
+                </header>
+                
+                <div id="generatedLibrary" class="audio-library"></div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

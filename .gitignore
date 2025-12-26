@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Virtual environments
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Models (large files)
+models/lora/*/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.gguf
+
+# Audio files (uploaded/generated)
+data/raw/*.mp3
+data/raw/*.wav
+data/raw/*.flac
+data/raw/*.m4a
+data/raw/*.ogg
+data/processed/*.wav
+output/*.wav
+
+# Keep directory structure
+!data/raw/README.md
+!data/processed/.gitkeep
+!data/metadata/.gitkeep
+!output/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+*.tmp
+*.temp

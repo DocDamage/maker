@@ -1,0 +1,54 @@
+# MusicGen LoRA Training Pipeline Requirements
+# Optimized for RTX 3060 (12GB VRAM)
+
+# Web UI
+flask>=3.0.0
+werkzeug>=3.0.0
+
+# PyTorch with CUDA 12.1 (install separately if needed)
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+torch>=2.1.0
+torchaudio>=2.1.0
+
+# MusicGen and AudioCraft
+audiocraft>=1.3.0
+
+# Parameter-efficient fine-tuning
+peft>=0.7.0
+
+# Hugging Face libraries
+transformers>=4.36.0
+accelerate>=0.25.0
+datasets>=2.15.0
+
+# Audio processing
+librosa>=0.10.0
+soundfile>=0.12.0
+pydub>=0.25.0
+
+# Audio analysis for auto-labeling
+essentia>=2.1b6.dev1034; platform_system != "Windows"
+# Note: essentia can be tricky on Windows, see INSTALL_NOTES.md
+
+# Numba for performance
+numba>=0.58.0
+
+# Progress bars and CLI
+tqdm>=4.65.0
+rich>=13.0.0
+typer>=0.9.0
+
+# Data handling
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Visualization (optional, for monitoring)
+matplotlib>=3.7.0
+tensorboard>=2.15.0
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0
+
+# Optional: Vocal removal (large download ~1GB)
+# demucs>=4.0.0
