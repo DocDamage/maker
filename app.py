@@ -41,7 +41,51 @@ progress_state = {
 }
 
 # Message queue for real-time updates
+# Message queue for real-time updates
 message_queues = {}
+
+# =============================================================================
+# AGENT INITIALIZATION
+# =============================================================================
+try:
+    from agents.orchestrator import AgentOrchestrator
+    
+    # Path to where your models are stored
+    MODELS_DIR = Path(r"C:\Users\dferr\Desktop\Aetherium_Game_Engine\local-ai\models\llm")
+    
+    orchestrator = AgentOrchestrator(MODELS_DIR)
+    print("✅ Agent Orchestrator Initialized")
+except Exception as e:
+    orchestrator = None
+    print(f"⚠️ Agent Orchestrator Failed to Load: {e}")
+
+# Initialize Studio Manager
+try:
+    from studios.manager import StudioManager
+    studio_manager = StudioManager()
+    print("✅ Studio Manager Initialized")
+except Exception as e:
+    studio_manager = None
+    print(f"⚠️ Studio Manager Failed to Load: {e}")
+
+# Initialize RAG System
+try:
+    from rag.system import RAGSystem
+    rag_system = RAGSystem(Path("data"))
+    print("✅ RAG System Initialized")
+except Exception as e:
+    rag_system = None
+    print(f"⚠️ RAG System Failed to Load: {e}")
+
+# =============================================================================
+# ROUTES - Pages
+# =============================================================================
+
+
+# =============================================================================
+# ROUTES - Pages
+# =============================================================================
+
 
 
 # =============================================================================
@@ -161,6 +205,88 @@ def upload_files():
 def serve_generated_audio(filename):
     """Serve a generated audio file."""
     return send_from_directory(OUTPUT_DIR, filename)
+
+
+# =============================================================================
+# =============================================================================
+# ROUTES - Agent Actions
+# =============================================================================
+
+@app.route('/api/agents/enhance-prompt', methods=['POST'])
+def enhance_prompt():
+    """Enhance user prompt using local LLM agent."""
+    if not orchestrator:
+        return jsonify({"error": "Agent system not initialized (check logs)"}), 503
+        
+    data = request.json or {}
+    prompt = data.get('prompt', '')
+    
+    if not prompt:
+        return jsonify({"error": "No prompt provided"}), 400
+        
+    try:
+        # Run agent
+        result = orchestrator.enhance_prompt(prompt)
+        return jsonify(result)
+    except Exception as e:
+        result = orchestrator.enhance_prompt(prompt)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/studio/select', methods=['POST'])
+def select_studio():
+    """Switch active studio."""
+    if not studio_manager:
+        return jsonify({"error": "Studio manager not initialized"}), 503
+        
+    data = request.json or {}
+    studio = data.get('studio')
+    
+    if not studio:
+        return jsonify({"error": "No studio specified"}), 400
+        
+    result = studio_manager.switch_studio(studio)
+    return jsonify(result)
+
+@app.route('/api/studio/current', methods=['GET'])
+def get_current_studio():
+    """Get active studio."""
+    if not studio_manager:
+        return jsonify({"studio": "standard", "error": "Not initialized"})
+        
+    return jsonify({"studio": studio_manager.get_active_studio()})
+
+
+@app.route('/api/rag/similar', methods=['POST'])
+def find_similar():
+    """Find similar tracks via RAG."""
+    if not rag_system:
+        return jsonify({"error": "RAG system not initialized"}), 503
+        
+    data = request.json or {}
+    prompt = data.get('prompt', '')
+    
+    if not prompt:
+        return jsonify({"error": "No prompt provided"}), 400
+        
+    results = rag_system.query_similar(prompt)
+    return jsonify(results)
+
+@app.route('/api/rag/index', methods=['POST'])
+def run_indexing():
+    """Trigger re-indexing of library."""
+    if not rag_system:
+         return jsonify({"error": "RAG system not initialized"}), 503
+         
+    def background_index():
+        rag_system.index_library(METADATA_DIR)
+        
+    thread = threading.Thread(target=background_index)
+    thread.start()
+    
+    return jsonify({"status": "started", "message": "Indexing started in background"})
 
 
 # =============================================================================
@@ -337,11 +463,40 @@ def start_generation():
         progress_state["generating"]["progress"] = 10
         
         try:
+            # Route through Studio Manager if available
+            final_prompt = prompt
+            studio_metadata = {}
+            
+            if studio_manager:
+                # This returns a dict with enhanced prompt and metadata
+                studio_result = studio_manager.process_generation_request(prompt, duration)
+                final_prompt = studio_result.get("prompt", prompt)
+                studio_metadata = studio_result.get("metadata", {})
+                
+                # Update progress with studio info
+                if "studio" in studio_metadata:
+                    progress_state["generating"]["message"] = f"Using {studio_metadata['studio']} Ensemble..."
+                    time.sleep(1) # Visual feedback
+            
+            # Use RAG to find similar tracks for style conditioning
+            if rag_system:
+                progress_state["generating"]["message"] = "Searching vector database..."
+                similar_tracks = rag_system.query_similar(prompt, n_results=1)
+                
+                if similar_tracks:
+                    ref_track = similar_tracks[0]['metadata']
+                    ref_desc = ref_track.get('description', '')
+                    # Append style reference to prompt
+                    final_prompt += f" (Style Ref: {ref_desc})"
+                    progress_state["generating"]["message"] = f"Found Ref: {ref_track.get('filename', 'Unknown')}"
+                    time.sleep(0.5)
+
             import subprocess
             
+            # We pass the enhanced prompt to the generation script
             cmd = [
                 sys.executable, "scripts/generate.py",
-                "--prompt", prompt,
+                "--prompt", final_prompt,
                 "--duration", str(duration),
                 "--count", str(count),
                 "--temperature", str(temperature),

@@ -52,3 +52,12 @@ pyyaml>=6.0
 
 # Optional: Vocal removal (large download ~1GB)
 # demucs>=4.0.0
+
+# LLM & RAG Support
+llama-cpp-python>=0.2.23
+chromadb>=0.4.22
+sentence-transformers>=2.2.2
+
+# Symbolic Music Support
+mido>=1.3.0
+music21>=9.1.0

@@ -5,25 +5,43 @@
 // ============================================
 // Navigation
 // ============================================
+const navItems = document.querySelectorAll('.nav-item');
+const sections = document.querySelectorAll('.section');
 
-document.querySelectorAll('.nav-item').forEach(item => {
+function switchSection(sectionId) {
+    // Hide all sections
+    sections.forEach(s => s.classList.remove('active'));
+
+    // Deactivate all nav items
+    navItems.forEach(n => n.classList.remove('active'));
+
+    // Show target section
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+
+    // Activate nav item
+    const activeNav = document.querySelector(`.nav-item[data-section="${sectionId}"]`);
+    if (activeNav) {
+        activeNav.classList.add('active');
+    }
+
+    // Refresh data for certain sections
+    if (sectionId === 'library') loadGeneratedLibrary();
+    if (sectionId === 'process') loadMetadata();
+}
+
+navItems.forEach(item => {
     item.addEventListener('click', (e) => {
         e.preventDefault();
-        const section = item.dataset.section;
-
-        // Update nav
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-
-        // Update sections
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(section).classList.add('active');
-
-        // Refresh data for certain sections
-        if (section === 'library') loadGeneratedLibrary();
-        if (section === 'process') loadMetadata();
+        const sectionId = item.dataset.section;
+        switchSection(sectionId);
     });
 });
+
+// Default to Studio view
+switchSection('studio');
 
 // ============================================
 // API Helpers
@@ -300,6 +318,87 @@ function setPrompt(text) {
 document.getElementById('temperature').addEventListener('input', (e) => {
     document.getElementById('temperatureValue').textContent = e.target.value;
 });
+
+// ============================================
+// Agent Actions
+// ============================================
+
+async function enhancePrompt() {
+    const promptInput = document.getElementById('prompt');
+    const prompt = promptInput.value.trim();
+    const btn = document.getElementById('btnEnhance');
+
+    if (!prompt) {
+        showToast('Please enter a prompt first', 'error');
+        return;
+    }
+
+    // UI Loading state
+    btn.textContent = '🤖';
+    btn.disabled = true;
+    showToast('AI is enhancing your prompt...', 'info');
+
+    try {
+        const result = await api('/agents/enhance-prompt', {
+            method: 'POST',
+            body: JSON.stringify({ prompt }),
+        });
+
+        if (result.enhanced_prompt) {
+            promptInput.value = result.enhanced_prompt;
+            showToast('Prompt enhanced!', 'success');
+
+            // Log technical specs if available
+            if (result.technical_specs) {
+                console.log('Technical Specs:', result.technical_specs);
+            }
+        }
+    } catch (error) {
+        showToast('Enhancement failed', 'error');
+    } finally {
+        btn.textContent = '✨';
+        btn.disabled = false;
+    }
+}
+
+
+// ============================================
+// Studio Actions
+// ============================================
+
+async function selectStudio(studioName) {
+    // Optimistic UI update
+    updateStudioUI(studioName);
+
+    showToast(`Switching to ${studioName} Studio...`, 'info');
+
+    try {
+        const result = await api('/studio/select', {
+            method: 'POST',
+            body: JSON.stringify({ studio: studioName }),
+        });
+
+        if (result.status === 'success' || result.status === 'already_active') {
+            showToast(`${result.studio} Studio Ready!`, 'success');
+        } else {
+            showToast('Failed to switch studio', 'error');
+        }
+    } catch (error) {
+        showToast('Connection failed', 'error');
+    }
+}
+
+function updateStudioUI(studioName) {
+    document.querySelectorAll('.studio-card').forEach(card => {
+        card.classList.remove('active');
+    });
+
+    const activeCard = document.getElementById(`studio-${studioName}`);
+    if (activeCard) {
+        activeCard.classList.add('active');
+    }
+}
+
 
 // ============================================
 // Metadata & Library
